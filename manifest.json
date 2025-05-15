@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "CSRF Detector",
-  "version": "1.0",
-  "description": "Detect & block CSRF attacks",
+  "name": "CSRF Defender",
+  "version": "1.1.0",
+  "description": "Detect & warn about potential CSRF attacks without blocking normal browsing",
 
   "background": {
     "service_worker": "background.js"
@@ -10,11 +10,10 @@
 
   "permissions": [
     "storage",
-    "alarms",
-    "declarativeNetRequest",
-    "scripting",
+    "notifications",
     "webRequest",
     "webRequestBlocking",
+    "scripting",
     "tabs"
   ],
 
@@ -25,16 +24,18 @@
     "default_icon": "icon.png"
   },
 
-  "web_accessible_resources": [{
-  "resources": ["csrf_rules.json"],
-  "matches": ["<all_urls>"]
-  }],
-
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
       "js": ["content.js"],
-      "run_at": "document_idle"
+      "run_at": "document_start"
+    }
+  ],
+
+  "web_accessible_resources": [
+    {
+      "resources": ["blocked.html"],
+      "matches": ["<all_urls>"]
     }
   ]
 }
