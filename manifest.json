@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "CSRF Defender",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Виявлення та попередження про міжсайтові підробки запитів (CSRF)",
 
   "permissions": [
@@ -21,6 +21,13 @@
       "matches": ["<all_urls>"],
       "js": ["content.js"],
       "run_at": "document_start"
+    }
+  ],
+
+  "web_accessible_resources": [
+    {
+      "resources": ["page_inject.js"],
+      "matches": ["<all_urls>"]
     }
   ],
 
