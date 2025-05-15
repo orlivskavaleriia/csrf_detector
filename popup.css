@@ -1,0 +1,259 @@
+:root {
+  --bg: #ffffff;
+  --drawer-bg: #f2f2f2;
+  --text: #333333;
+  --border: #000000;
+  --green: #16ad49;
+  --red: #cc3827;
+}
+* {
+  box-sizing: border-box;
+  margin: 0; padding: 0;
+}
+body {
+  width: 320px;
+  background: var(--bg);
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  color: var(--text);
+  position: relative;
+  overflow: hidden;
+}
+/* Drawer */
+.drawer {
+  position: absolute;
+  top: 0; left: 0;
+  width: 80%; height: 100%;
+  background: var(--drawer-bg);
+  transform: translateX(-100%);
+  transition: transform 0.3s;
+  z-index: 10;
+  padding: 1em;
+  overflow-y: auto;
+}
+.drawer.open {
+  transform: translateX(0);
+}
+.close-btn {
+  position: absolute;
+  top: 0.5em; right: 0.5em;
+  background: none; border: none;
+  font-size: 1.5rem; cursor: pointer;
+}
+/* Blur main when drawer open */
+.main-content.blurred {
+  filter: brightness(0.6);
+}
+/* Drawer title */
+.drawer-title h3 {
+  margin-bottom: 0.5em;
+  font-size: 1rem;
+  font-weight: bold;
+}
+/* Drawer sections */
+.drawer-section {
+  margin-bottom: 1em;
+}
+.drawer-section h3 {
+  margin-bottom: 0.5em;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.25em;
+}
+.toggle-group {
+  display: flex; align-items: center; margin-bottom: 0.25em;
+}
+.toggle-group input[type="checkbox"] {
+  width: 1.2em; height: 1.2em;
+}
+.toggle-group label {
+  margin-left: 0.5em; font-size: 0.9rem;
+}
+.small {
+  font-size: 0.75rem; margin-top: 0.25em;
+}
+.learn p {
+  font-size: 0.8rem; margin: 0.5em 0;
+}
+
+/* Divider */
+hr.divider {
+  border: none;
+  height: 1px;
+  background: var(--border);
+  margin: 0.5em 0;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5em;
+}
+.menu-btn, .status-btn {
+  background: none; border: none;
+  font-size: 1.2rem; cursor: pointer;
+}
+.title {
+  font-weight: bold; font-size: 1rem;
+}
+
+/* Status */
+.status {
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 0.5em;
+}
+.status-indicator {
+  width: 0.75em; height: 0.75em;
+  border-radius: 50%; margin-right: 0.5em;
+}
+.status-indicator.active {
+  background: var(--green);
+}
+.status-indicator.inactive {
+  background: var(--red);
+}
+
+/* Scan button */
+.scan-btn {
+  display: block;
+  width: calc(100% - 1em);
+  margin: 0.5em auto;
+  padding: 0.75em 0;
+  background: #f0f0f0;
+  border: 1px solid var(--border);
+  border-radius: 0.5em;
+  font-size: 1.1rem; font-weight: bold;
+  cursor: pointer;
+}
+
+/* Inline header */
+.inline-header {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 0 0.5em;
+}
+.inline-header h2 {
+  font-size: 0.9rem;
+}
+.sec-btn {
+  padding: 0.3em 0.6em;
+  background: #f0f0f0;
+  border: 1px solid var(--border);
+  border-radius: 0.25em;
+  cursor: pointer;
+}
+
+/* Lists */
+.list {
+  list-style: none;
+  font-size: 0.85rem;
+  padding-left: 1em;
+  margin-bottom: 0.5em;
+}
+
+/* Centered header */
+.center {
+  text-align: center;
+  font-size: 0.9rem;
+  margin-bottom: 0.5em;
+}
+
+/* Input group */
+.input-group {
+  display: flex; 
+  padding: 0 0.5em;
+}
+.input-group input {
+  flex: 1; padding: 0.4em;
+  border: 1px solid var(--border);
+  border-radius: 0.25em 0 0 0.25em;
+}
+.input-group button {
+  padding: 0.4em 0.6em;
+  border: 1px solid var(--border);
+  border-left: none;
+  border-radius: 0 0.25em 0.25em 0;
+  background: #f0f0f0; cursor: pointer;
+}
+
+/* Візуалізація натискання для всіх кнопок */
+button {
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background-color 0.2s;
+}
+
+/* Ховер — трохи підсвітити фон */
+button:hover {
+  background-color: #bcc7cc;
+}
+
+/* Active — віджати вниз */
+button:active {
+  transform: translateY(2px) scale(0.98);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+}
+
+/* Окремо підкреслимо стилі для головної Scan-кнопки */
+.scan-btn:hover {
+  background-color: #bcc7cc;
+}
+.scan-btn:active {
+  transform: translateY(2px) scale(0.98);
+  box-shadow: inset 0 3px 6px rgba(0,0,0,0.2);
+}
+
+/* Та для вторинних кнопок (очистити, пошук) */
+.sec-btn:hover {
+  background-color: #bcc7cc;
+}
+.sec-btn:active {
+  transform: translateY(1px) scale(0.98);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+}
+
+/* Для іконок меню/статусу */
+.menu-btn:hover,
+.status-btn:hover {
+  background-color: rgba(0,0,0,0.05);
+  border-radius: 4px;
+}
+.menu-btn:active,
+.status-btn:active {
+  transform: translateY(1px);
+  background-color: rgba(0,0,0,0.1);
+}
+
+/* Кнопка «×» для видалення домену */
+.remove-btn {
+  background: none;
+  border: none;
+  color: #200502;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-left: 0.5em;
+  padding: 0;
+}
+.remove-btn:hover {
+  color: #851408;
+}
+
+#audit-section {
+  margin-top: 1em;
+  font-size: 0.9em;
+}
+
+#audit-section button {
+  margin-right: 0.5em;
+  padding: 0.3em 0.6em;
+}
+
+#audit-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5em;
+}
+#audit-table th,
+#audit-table td {
+  border: 1px solid #ccc;
+  padding: 0.2em 0.4em;
+  text-align: left;
+}

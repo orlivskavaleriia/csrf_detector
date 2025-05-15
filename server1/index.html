@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Server 1</title>
+  <script>
+    function sameOriginFetch() {
+      // запит до свого ж домену ⇒ очікуємо green
+      fetch("http://localhost:8000/ping")
+        .then(r => console.log("200 OK"))
+        .catch(e => console.warn(e));
+    }
+    function crossOriginFetch() {
+      // запит на інший домен (порт 8001) ⇒ очікуємо red (або yellow, якщо додали в white list)
+      fetch("http://localhost:8001/ping")
+        .then(r => console.log("200 OK"))
+        .catch(e => console.warn(e));
+    }
+  </script>
+</head>
+<body>
+  <h1>Server 1 (порт 8000)</h1>
+  <button onclick="sameOriginFetch()">Same-Origin Fetch</button>
+  <button onclick="crossOriginFetch()">Cross-Origin Fetch</button>
+</body>
+</html>

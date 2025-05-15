@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>CSRF Detector</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <!-- Горизонтальна шторка зліва (без змін) -->
+  <div id="drawer" class="drawer">
+    <button id="drawer-close" class="close-btn">&times;</button>
+    <div class="drawer-title"><h3>Меню</h3></div>
+    <hr>
+    <div class="drawer-section">
+      <h3>Налаштування:</h3>
+      <div class="toggle-group">
+        <input type="checkbox" id="autoblock-toggle">
+        <label for="autoblock-toggle">Автоматичне блокування</label>
+      </div>
+      <p class="small">
+        При увімкненому автоблокуванні плагін працює в режимі «висока чутливість».<br>
+        Наступна версія додасть гнучке регулювання рівнів чутливості.
+      </p>
+    </div>
+    <hr>
+    <div class="drawer-section learn">
+      <h3>Навчальний модуль:</h3>
+      <p><strong>Що таке CSRF-атака?</strong><br>
+      Cross-Site Request Forgery (CSRF) – це атака, коли зловмисник примушує ваш браузер виконати дію на сайті, де ви авторизовані.</p>
+      <p><strong>Як працює цей плагін?</strong><br>
+      – Перехоплює AJAX-запити та перевіряє їхні заголовки й Content-Type.<br>
+      – Додає захисні CSRF-токени у форми.<br>
+      – Блокує підозрілі запити й веде журнал загроз.</p>
+      <p><strong>Чому це важливо?</strong><br>
+      Захист від CSRF допомагає уникнути несанкціонованих дій від вашого імені та зберегти безпеку ваших даних.</p>
+    </div>
+  </div>
+
+  <!-- Основний контент -->
+  <div class="main-content">
+    <!-- Шапка -->
+    <div class="header">
+      <button id="menu-toggle" class="menu-btn">&#9776;</button>
+      <span class="title">[CSRF Detector]</span>
+      <button id="status-toggle" class="status-btn">&#9711;</button>
+    </div>
+    <hr class="divider">
+
+    <!-- Статус -->
+    <div class="status">
+      <span id="indicator" class="status-indicator active"></span>
+      <span id="status-text">Захист активний</span>
+    </div>
+
+    <!-- Scan -->
+    <button id="scan-btn" class="scan-btn">СКАНУВАТИ</button>
+    <hr class="divider">
+
+    <!-- Заблоковані запити -->
+    <div class="section inline-header">
+      <h2>Заблоковані запити</h2>
+      <button id="clear-requests" class="sec-btn">Очистити</button>
+    </div>
+    <ul id="blocked-requests" class="list">
+      <li>Немає заблокованих запитів</li>
+    </ul>
+
+    <!-- Заблоковані форми -->
+    <div class="section inline-header">
+      <h2>Заблоковані форми</h2>
+      <button id="clear-forms" class="sec-btn">Очистити</button>
+    </div>
+    <ul id="blocked-forms" class="list">
+      <li>Немає заблокованих форм</li>
+    </ul>
+
+    <hr class="divider">
+
+    <!-- Додати домен -->
+    <div class="section">
+      <h2 class="center">Додати домен в білий список</h2>
+      <div class="input-group">
+        <input id="whitelist-input" type="text" placeholder="example.com">
+        <button id="btn-whitelist" class="sec-btn">&#128269;</button>
+      </div>
+      <ul id="trusted-list" class="list"></ul>
+    </div>
+  </div>
+  <section id="audit-section">
+    <button id="run-audit">Запустити аудит CSRF</button>
+    <button id="export-json">Експорт JSON</button>
+    <table>
+      <thead>
+        <tr><th>Action/URL</th><th>Метод</th><th>CSRF-токен</th></tr>
+      </thead>
+      <tbody id="audit-table"></tbody>
+    </table>
+  </section>
+
+  <script src="popup.js"></script>
+</body>
+</html>

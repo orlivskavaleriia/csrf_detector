@@ -1,0 +1,8 @@
+{
+    "cspRequired": true,
+    "forbiddenContentTypes": [
+      "text/html",
+      "application/javascript"
+    ]
+  }
+  
