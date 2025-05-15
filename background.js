@@ -1,4 +1,4 @@
-// background.js (MV3 + DNR + CSRF Audit + Auto-update with fallback)
+// background.js (MV3 + DNR + CSRF Audit + Auto-update with fallback)+
 
 // Константи
 const COLOR_MAP = {
