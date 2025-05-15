@@ -8,7 +8,7 @@ const COLOR_MAP = {
 };
 
 // ваше raw-посилання на csf_rules.json у GitHub
-const POLICY_URL  = 'https://raw.githubusercontent.com/orlivskavaleriia/csrf_detector/refs/heads/main/csrf_rules.json?token=GHSAT0AAAAAADD55C3THARWRUQQQMO6CQ5Q2BF6SPQ';
+const POLICY_URL  = 'https://raw.githubusercontent.com/orlivskavaleriia/csrf_detector/refs/heads/main/csrf_rules.json';
 const POLICY_ALARM = 'updatePolicies';
 
 // Налаштування (зберігаємо у chrome.storage)
