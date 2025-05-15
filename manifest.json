@@ -1,27 +1,19 @@
 {
   "manifest_version": 3,
   "name": "CSRF Defender",
-  "version": "1.1.0",
-  "description": "Detect & warn about potential CSRF attacks without blocking normal browsing",
-
-  "background": {
-    "service_worker": "background.js"
-  },
+  "version": "1.2.0",
+  "description": "Виявлення та попередження про міжсайтові підробки запитів (CSRF)",
 
   "permissions": [
     "storage",
-    "notifications",
-    "webRequest",
-    "webRequestBlocking",
-    "scripting",
     "tabs"
   ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
 
-  "host_permissions": ["<all_urls>"],
-
-  "action": {
-    "default_popup": "popup.html",
-    "default_icon": "icon.png"
+  "background": {
+    "service_worker": "background.js"
   },
 
   "content_scripts": [
@@ -32,10 +24,8 @@
     }
   ],
 
-  "web_accessible_resources": [
-    {
-      "resources": ["blocked.html"],
-      "matches": ["<all_urls>"]
-    }
-  ]
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "icon.png"
+  }
 }

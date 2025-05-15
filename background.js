@@ -7,8 +7,9 @@ const COLOR_MAP = {
 };
 
 let settings = { autoBlock: true, trustedDomains: [] };
+const pageStatus = {};  // tabId → 'green'|'yellow'|'red'
 
-// Завантажуємо налаштування з storage
+// Завантажуємо налаштування
 chrome.storage.local.get(
   ['autoBlock','trustedDomains'],
   data => {
@@ -23,60 +24,38 @@ chrome.storage.onChanged.addListener(changes => {
   if (changes.trustedDomains) settings.trustedDomains = changes.trustedDomains.newValue;
 });
 
-// Лог подій у storage
+// Лог подій
 function logEvent(e) {
-  chrome.storage.local.get({ eventHistory: [] }, ({ eventHistory })=> {
+  chrome.storage.local.get({ eventHistory: [] }, ({ eventHistory }) => {
     eventHistory.push(e);
     chrome.storage.local.set({ eventHistory });
   });
 }
 
-// 1) Аналізуємо заголовки (без блокування на цьому рівні)
-chrome.webRequest.onBeforeSendHeaders.addListener(
-  details => {
-    const hdrs = {};
-    (details.requestHeaders||[]).forEach(h=> hdrs[h.name.toLowerCase()]=h.value);
-    const urlOrigin = new URL(details.url).origin;
-    const originHdr = hdrs.origin;
-    const referer   = hdrs.referer;
-    let risk = 'green';
+// Отримуємо сигнали з content.js
+chrome.runtime.onMessage.addListener((msg, sender) => {
+  if (!sender.tab) return;
+  const tabId = sender.tab.id;
 
-    if (originHdr) {
-      if (originHdr !== urlOrigin) risk = 'red';
-    } else if (referer) {
-      try { if (new URL(referer).origin !== urlOrigin) risk = 'red'; }
-      catch { risk = 'red'; }
-    } else {
-      risk = 'red';
-    }
+  if (msg.type === 'CSRF_WARN') {
+    // msg.level: 'yellow' або 'red'
+    pageStatus[tabId] = msg.level;
 
-    // Белый список доменів → рівень “жовтий”
-    const host = new URL(details.url).hostname;
-    if (risk === 'red' && settings.trustedDomains.includes(host)) {
-      risk = 'yellow';
-    }
-
-    // Оновлюємо бейдж
-    chrome.action.setBadgeText({ text: risk[0].toUpperCase() });
-    chrome.action.setBadgeBackgroundColor({ color: COLOR_MAP[risk] });
+    // Оновлюємо бейдж для вкладки
+    chrome.action.setBadgeText({ tabId, text: msg.level === 'red' ? '!' : '?' });
+    chrome.action.setBadgeBackgroundColor({ tabId, color: COLOR_MAP[msg.level] });
 
     // Лог
-    logEvent({ url: details.url, risk, timestamp: Date.now() });
+    logEvent({
+      type:    msg.level === 'red' ? 'blocked' : 'warned',
+      url:     msg.url,
+      level:   msg.level,
+      time:    Date.now()
+    });
+  }
+});
 
-    // Сповіщаємо користувача, якщо високий ризик
-    if (risk === 'red' && settings.autoBlock) {
-      chrome.notifications.create({
-        type: 'basic',
-        iconUrl: 'icon.png',
-        title: 'Можлива CSRF-атака',
-        message: `Запит до ${details.url} з іншого джерела.`,
-        requireInteraction: false
-      });
-    }
-
-    // Не блокуємо на цьому рівні — контент-скрипт поставить confirm
-    return {};
-  },
-  { urls: ['<all_urls>'] },
-  ['requestHeaders']
-);
+// При закритті вкладки чистимо статус
+chrome.tabs.onRemoved.addListener(tabId => {
+  delete pageStatus[tabId];
+});
