@@ -25,6 +25,11 @@
     "default_icon": "icon.png"
   },
 
+  "web_accessible_resources": [{
+  "resources": ["csrf_rules.json"],
+  "matches": ["<all_urls>"]
+  }],
+
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
