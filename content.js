@@ -1,4 +1,3 @@
-// content.js
 console.log("CSRF Defender content script loaded");
 
 // 1) Інжектимо файл page_inject.js у DOM сторінки,
@@ -10,7 +9,7 @@ console.log("CSRF Defender content script loaded");
   s.onload = () => s.remove();
 })();
 
-// 2) Інжекція CSRF-токена у всі <form> (залишається непогано)
+// 2) Інжекція CSRF-токена у всі <form> 
 function generateToken(len = 32) {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   return Array.from({ length: len })

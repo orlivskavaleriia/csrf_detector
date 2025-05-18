@@ -1,6 +1,3 @@
-// page_inject.js
-// Виконується в контексті сторінки, обходить CSP та перехоплює POST-запити
-
 console.log("CSRF Defender → page context override loaded");
 
 ;(function(){

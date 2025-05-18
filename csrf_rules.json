@@ -1,22 +1,11 @@
 [
   {
-    "id": 1001,
+    "id": 1,
     "priority": 1,
     "action": { "type": "block" },
     "condition": {
-      "urlFilter": "*",                        
-      "resourceTypes": ["xmlhttprequest"],
-      "initiatorDomains": ["evil.com"]        
-    }
-  },
-  {
-    "id": 1002,
-    "priority": 1,
-    "action": { "type": "redirect", "redirect": { "extensionPath": "/blocked.html" } },
-    "condition": {
-      "urlFilter": "*/sensitive-endpoint",
+      "urlFilter": "||my.backend/api/",
       "resourceTypes": ["xmlhttprequest"]
     }
   }
-
 ]
