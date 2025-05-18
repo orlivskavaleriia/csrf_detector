@@ -175,8 +175,7 @@ chrome.tabs.onRemoved.addListener(tabId => {
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === 'GET_COOKIES') {
-    const url = new URL(msg.url);
-    chrome.cookies.getAll({ domain: url.hostname }, cookies => {
+    chrome.cookies.getAll({ url: msg.url }, cookies => {
       const cookieAudit = {
         total: cookies.length,
         secure: cookies.filter(c => c.secure).length,

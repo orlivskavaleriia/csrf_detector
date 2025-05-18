@@ -203,6 +203,13 @@ updateAuditTable();
 function displayFormsAudit(forms) {
   const formsList = document.getElementById('formsList');
   formsList.innerHTML = '';
+  formsList.classList.remove('fade-in');
+
+  if (!forms.length) {
+    formsList.innerHTML = '<div class="empty-msg">Немає знайдених форм</div>';
+    formsList.classList.add('fade-in');
+    return;
+  }
 
   forms.forEach(form => {
     const formElement = document.createElement('div');
@@ -259,15 +266,18 @@ function displayFormsAudit(forms) {
 
     formsList.appendChild(formElement);
   });
+  formsList.classList.add('fade-in');
 }
 
 // Функція для відображення результатів аудиту запитів
 function displayRequestsAudit(requests) {
   const requestsList = document.getElementById('requestsList');
   requestsList.innerHTML = '';
+  requestsList.classList.remove('fade-in');
 
   if (!requests.length) {
     requestsList.innerHTML = '<div class="empty-msg">Немає знайдених AJAX-запитів</div>';
+    requestsList.classList.add('fade-in');
     return;
   }
 
@@ -299,15 +309,18 @@ function displayRequestsAudit(requests) {
 
     requestsList.appendChild(requestElement);
   });
+  requestsList.classList.add('fade-in');
 }
 
 // Функція для відображення результатів аудиту кукі
 function displayCookiesAudit(cookies) {
   const cookiesList = document.getElementById('cookiesList');
   if (!cookiesList) return;
+  cookiesList.classList.remove('fade-in');
 
   if (!cookies || cookies.total === 0) {
     cookiesList.innerHTML = '<div class="empty-msg">Немає знайдених кукі</div>';
+    cookiesList.classList.add('fade-in');
     return;
   }
 
@@ -328,12 +341,14 @@ function displayCookiesAudit(cookies) {
       </ul>
     </div>
   `;
+  cookiesList.classList.add('fade-in');
 }
 
 // Функція для відображення загального показника безпеки
 function displaySecurityScore(score) {
   const scoreElement = document.getElementById('securityScore');
   if (!scoreElement) return;
+  scoreElement.classList.remove('fade-in');
 
   let scoreClass = 'low';
   let icon = '😱';
@@ -355,6 +370,7 @@ function displaySecurityScore(score) {
       <div class="score-description">${desc}</div>
     </div>
   `;
+  scoreElement.classList.add('fade-in');
 }
 
 // Оновлений обробник результатів аудиту

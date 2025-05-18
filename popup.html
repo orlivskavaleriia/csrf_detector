@@ -340,6 +340,15 @@
     color: #666;
     margin-top: 8px;
   }
+
+  /* Анімація появи для результатів аудиту */
+  .fade-in {
+    animation: fadeInAnim 0.7s ease;
+  }
+  @keyframes fadeInAnim {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
   </style>
 
   <script src="popup.js"></script>
