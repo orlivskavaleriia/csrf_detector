@@ -7,34 +7,38 @@
   "permissions": [
     "storage",
     "tabs",
+    "alarms",
     "declarativeNetRequest",
-    "declarativeNetRequestFeedback",
-    "alarms"
+    "declarativeNetRequestFeedback"
   ],
-  "declarative_net_request": {
-    "rule_resources": [{
-      "id": "csrf_block_rules",
-      "enabled": true,
-      "path": "csrf_block_rules.json"
-    }],
 
   "host_permissions": [
     "<all_urls>"
   ],
 
+  "declarative_net_request": {
+    "rule_resources": [{
+      "id": "csrf_static_rules",
+      "enabled": true,
+      "path": "csrf_rules.json"
+    }]
+  },
+
   "background": {
     "service_worker": "background.js"
   },
 
-  "web_accessible_resources": [
-    {
-      "resources": ["page_inject.js"],
-      "matches": ["<all_urls>"]
-    }
-  ],
-
   "action": {
     "default_popup": "popup.html",
-    "default_icon": "icon.png"
-  }
-}}
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  },
+
+  "web_accessible_resources": [{
+    "resources": ["popup.css", "popup.js"],
+    "matches": ["<all_urls>"]
+  }]
+}
