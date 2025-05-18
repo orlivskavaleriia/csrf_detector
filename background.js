@@ -175,16 +175,23 @@ chrome.tabs.onRemoved.addListener(tabId => {
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === 'GET_COOKIES') {
-    chrome.cookies.getAll({ url: msg.url }, cookies => {
+    const url = new URL(msg.url);
+    chrome.cookies.getAll({}, cookies => {
+      // Фільтруємо кукі вручну по домену (hostname) і шляху
+      const filtered = cookies.filter(c => {
+        // Домен може бути з крапкою або без, порівнюємо обидва варіанти
+        return c.domain.replace(/^\./, '') === url.hostname;
+      });
+      console.log('COOKIES AUDIT (filtered):', filtered, 'url:', msg.url);
       const cookieAudit = {
-        total: cookies.length,
-        secure: cookies.filter(c => c.secure).length,
-        httpOnly: cookies.filter(c => c.httpOnly).length,
+        total: filtered.length,
+        secure: filtered.filter(c => c.secure).length,
+        httpOnly: filtered.filter(c => c.httpOnly).length,
         sameSite: {
-          strict: cookies.filter(c => c.sameSite === 'Strict').length,
-          lax: cookies.filter(c => c.sameSite === 'Lax').length,
-          none: cookies.filter(c => c.sameSite === 'None').length,
-          unspecified: cookies.filter(c => !c.sameSite).length
+          strict: filtered.filter(c => c.sameSite === 'Strict').length,
+          lax: filtered.filter(c => c.sameSite === 'Lax').length,
+          none: filtered.filter(c => c.sameSite === 'None').length,
+          unspecified: filtered.filter(c => !c.sameSite).length
         }
       };
       sendResponse(cookieAudit);
