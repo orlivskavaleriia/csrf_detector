@@ -344,10 +344,9 @@ function displaySecurityScore(score) {
 
 // Оновлений обробник результатів аудиту
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log('Отримано повідомлення у content.js:', message);
-  if (message.type === 'RUN_CSRF_AUDIT') {
-    // ... ваш код аудиту ...
-    sendResponse({ success: true });
+  console.log('Отримано AUDIT_RESULTS у popup:', message);
+  if (message.type === 'AUDIT_RESULTS') {
+    // ... відображення результатів ...
   }
 });
 
