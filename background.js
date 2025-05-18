@@ -14,6 +14,10 @@ let settings = {
 let csrfToken = null;
 const pageStatus = {};  // tabId → 'green'|'yellow'|'red'
 
+// Константи для оновлення політик
+const POLICY_UPDATE_INTERVAL = 24 * 60 * 60 * 1000; // 24 години
+const POLICY_SERVER_URL = 'https://your-policy-server.com/policies';
+
 // ——————————————————————————————————————————————————————————
 // Додана функція для блокування URL через DNR
 async function blockUrlWithDNR(ruleId, url) {
@@ -68,60 +72,74 @@ async function fetchCsrfToken() {
   }
 }
 
-// 3) Валідація Origin/Referer та X-CSRF-Token на HTTP-рівні
+// Функція для валідації заголовків та токенів
+async function validateRequestHeaders(details) {
+  const urlObj = new URL(details.url);
+  const originHeader = details.requestHeaders.find(h => h.name.toLowerCase() === 'origin')?.value;
+  const refererHeader = details.requestHeaders.find(h => h.name.toLowerCase() === 'referer')?.value;
+  const tokenHeader = details.requestHeaders.find(h => h.name === 'X-CSRF-Token')?.value;
+
+  // Перевірка Origin
+  if (originHeader && originHeader !== urlObj.origin && !settings.trustedDomains.includes(urlObj.origin)) {
+    return { valid: false, reason: 'INVALID_ORIGIN' };
+  }
+
+  // Перевірка Referer якщо Origin відсутній
+  if ((!originHeader || originHeader === 'null') && 
+      refererHeader && 
+      !refererHeader.startsWith(urlObj.origin) && 
+      !settings.trustedDomains.includes(urlObj.origin)) {
+    return { valid: false, reason: 'INVALID_REFERER' };
+  }
+
+  // Перевірка CSRF токена
+  if (!tokenHeader || tokenHeader !== csrfToken) {
+    return { valid: false, reason: 'INVALID_TOKEN' };
+  }
+
+  return { valid: true };
+}
+
+// Оновлений обробник запитів
 chrome.webRequest.onBeforeSendHeaders.addListener(
-  (details) => {
+  async (details) => {
     // Пропускаємо запити самого розширення
     if (details.initiator && details.initiator.startsWith('chrome-extension://')) {
       return { requestHeaders: details.requestHeaders };
     }
 
-    const urlObj       = new URL(details.url);
-    const originHeader = details.requestHeaders.find(h => h.name.toLowerCase() === 'origin')?.value;
-    const refererHeader= details.requestHeaders.find(h => h.name.toLowerCase() === 'referer')?.value;
-    const tokenHeader  = details.requestHeaders.find(h => h.name === 'X-CSRF-Token')?.value;
+    const validation = await validateRequestHeaders(details);
+    
+    if (!validation.valid) {
+      // Логуємо деталі заблокованого запиту
+      logEvent({
+        type: 'blocked',
+        url: details.url,
+        reason: validation.reason,
+        headers: {
+          origin: details.requestHeaders.find(h => h.name.toLowerCase() === 'origin')?.value,
+          referer: details.requestHeaders.find(h => h.name.toLowerCase() === 'referer')?.value,
+          token: details.requestHeaders.find(h => h.name === 'X-CSRF-Token')?.value
+        },
+        time: Date.now()
+      });
 
-    let verdict = 'green';
-
-    // Перевіряємо домен запиту
-    if (
-      originHeader &&
-      originHeader !== urlObj.origin &&
-      !settings.trustedDomains.includes(urlObj.origin)
-    ) {
-      verdict = 'red';
-    }
-    // Якщо Origin відсутній — дивимося на Referer
-    else if (
-      (!originHeader || originHeader === 'null') &&
-      refererHeader &&
-      !refererHeader.startsWith(urlObj.origin) &&
-      !settings.trustedDomains.includes(urlObj.origin)
-    ) {
-      verdict = 'red';
-    }
-
-    // Перевірка CSRF-токена
-    if (verdict === 'green') {
-      if (!tokenHeader || tokenHeader !== csrfToken) {
-        verdict = 'red';
-      }
-    }
-
-    // Реагуємо на результат
-    if (verdict === 'red') {
-      // позначаємо чи блокуємо
+      // Оновлюємо статус
       updateBadge(details.tabId, 'red');
-      logEvent({ type: 'blocked', url: details.url, level: 'red', time: Date.now() });
 
       if (settings.autoBlock) {
-        // замість return { cancel: true } — блокуємо через DNR
         blockUrlWithDNR(1, details.url);
       }
 
-    } else if (verdict === 'yellow') {
-      updateBadge(details.tabId, 'yellow');
-      logEvent({ type: 'warned', url: details.url, level: 'yellow', time: Date.now() });
+      return { cancel: true };
+    }
+
+    // Додаємо CSRF токен до запиту якщо його немає
+    if (!details.requestHeaders.find(h => h.name === 'X-CSRF-Token')) {
+      details.requestHeaders.push({
+        name: 'X-CSRF-Token',
+        value: csrfToken
+      });
     }
 
     return { requestHeaders: details.requestHeaders };
@@ -134,6 +152,7 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
 chrome.runtime.onInstalled.addListener(() => {
   loadSettings();
   fetchCsrfToken();
+  updateSecurityPolicies();
 });
 chrome.runtime.onStartup.addListener(() => {
   loadSettings();
@@ -193,4 +212,46 @@ chrome.runtime.onMessage.addListener((msg, sender) => {
 // При закритті вкладки чистимо статус
 chrome.tabs.onRemoved.addListener(tabId => {
   delete pageStatus[tabId];
+});
+
+// Функція для оновлення політик безпеки
+async function updateSecurityPolicies() {
+  try {
+    const response = await fetch(POLICY_SERVER_URL);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const policies = await response.json();
+    
+    // Оновлюємо правила в chrome.storage.sync
+    await chrome.storage.sync.set({
+      securityPolicies: policies,
+      lastPolicyUpdate: Date.now()
+    });
+
+    // Оновлюємо правила DNR
+    if (policies.rules) {
+      await chrome.declarativeNetRequest.updateDynamicRules({
+        removeRuleIds: policies.rules.map(r => r.id),
+        addRules: policies.rules
+      });
+    }
+
+    console.log('Security policies updated successfully');
+  } catch (error) {
+    console.error('Failed to update security policies:', error);
+  }
+}
+
+// Встановлюємо періодичне оновлення політик
+chrome.alarms.create('updatePolicies', {
+  periodInMinutes: POLICY_UPDATE_INTERVAL / (60 * 1000)
+});
+
+// Обробник для періодичного оновлення
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === 'updatePolicies') {
+    updateSecurityPolicies();
+  }
 });

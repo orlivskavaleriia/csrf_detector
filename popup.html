@@ -97,6 +97,75 @@
     </table>
   </section>
 
+  <div class="audit-section">
+    <h3>Результати аудиту безпеки</h3>
+    <div class="audit-controls">
+      <button id="runAudit" class="btn btn-primary">Запустити аудит</button>
+      <button id="clearAudit" class="btn btn-secondary">Очистити історію</button>
+    </div>
+    
+    <div class="audit-results">
+      <div class="forms-audit">
+        <h4>Аудит форм</h4>
+        <div id="formsList" class="audit-list"></div>
+      </div>
+      
+      <div class="requests-audit">
+        <h4>Аудит AJAX запитів</h4>
+        <div id="requestsList" class="audit-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+  .audit-section {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+  }
+
+  .audit-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+
+  .audit-results {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .audit-list {
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 10px;
+    background: white;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+  }
+
+  .form-item, .request-item {
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+  }
+
+  .form-item.secure {
+    border-left: 4px solid #28a745;
+  }
+
+  .form-item.insecure {
+    border-left: 4px solid #dc3545;
+  }
+
+  .request-item {
+    font-size: 0.9em;
+  }
+  </style>
+
   <script src="popup.js"></script>
 </body>
 </html>

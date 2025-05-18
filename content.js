@@ -53,3 +53,104 @@ window.addEventListener('message', event => {
     level: event.data.allowed ? 'yellow' : 'red'
   });
 });
+
+// Функція для аудиту форм на сторінці
+function auditForms() {
+  const forms = document.querySelectorAll('form');
+  const formAudit = [];
+
+  forms.forEach((form, index) => {
+    const formData = {
+      id: index,
+      action: form.action,
+      method: form.method,
+      hasCsrfToken: false,
+      hasSecureMethod: form.method.toUpperCase() === 'POST',
+      hasSecureAction: form.action.startsWith('https://'),
+      inputs: []
+    };
+
+    // Перевіряємо всі поля форми
+    form.querySelectorAll('input').forEach(input => {
+      formData.inputs.push({
+        name: input.name,
+        type: input.type,
+        required: input.required
+      });
+
+      // Перевіряємо наявність CSRF токена
+      if (input.name.toLowerCase().includes('csrf') || 
+          input.name.toLowerCase().includes('token')) {
+        formData.hasCsrfToken = true;
+      }
+    });
+
+    formAudit.push(formData);
+  });
+
+  return formAudit;
+}
+
+// Функція для аудиту AJAX запитів
+function auditAjaxRequests() {
+  const requests = [];
+  
+  // Перехоплюємо всі XHR запити
+  const originalXHR = window.XMLHttpRequest;
+  window.XMLHttpRequest = function() {
+    const xhr = new originalXHR();
+    const originalOpen = xhr.open;
+    
+    xhr.open = function() {
+      requests.push({
+        type: 'XHR',
+        url: arguments[1],
+        method: arguments[0],
+        timestamp: Date.now()
+      });
+      return originalOpen.apply(this, arguments);
+    };
+    
+    return xhr;
+  };
+
+  // Перехоплюємо всі fetch запити
+  const originalFetch = window.fetch;
+  window.fetch = function() {
+    requests.push({
+      type: 'FETCH',
+      url: arguments[0],
+      method: arguments[1]?.method || 'GET',
+      timestamp: Date.now()
+    });
+    return originalFetch.apply(this, arguments);
+  };
+
+  return requests;
+}
+
+// Обробник повідомлення для запуску аудиту
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'RUN_CSRF_AUDIT') {
+    const auditResults = {
+      forms: auditForms(),
+      requests: auditAjaxRequests(),
+      timestamp: Date.now(),
+      url: window.location.href
+    };
+
+    // Зберігаємо результати аудиту
+    chrome.storage.local.get({ auditHistory: [] }, ({ auditHistory }) => {
+      auditHistory.push(auditResults);
+      chrome.storage.local.set({ auditHistory });
+    });
+
+    // Відправляємо результати в background.js
+    chrome.runtime.sendMessage({
+      type: 'AUDIT_RESULTS',
+      data: auditResults
+    });
+
+    sendResponse({ success: true });
+  }
+});

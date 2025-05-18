@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>CSRF Defender Test</title>
+</head>
+<body>
+  <h1>CSRF Defender Local Test</h1>
+  <button id="btn-ok">Тест дозволений</button>
+  <button id="btn-bad">Тест заблокований</button>
+
+  <script>
+    // Кнопка з правильним токеном
+    document.getElementById('btn-ok').onclick = () => {
+      fetch('http://localhost:8000/api/data', {
+        method: 'GET',
+        credentials: 'include',
+        headers: { 'X-CSRF-Token': 'TEST_TOKEN_123' }
+      })
+      .then(r => console.log('✅ Allowed, status', r.status))
+      .catch(e => console.error('❌ Error/Blocked', e));
+    };
+
+    // Кнопка з неправильним токеном
+    document.getElementById('btn-bad').onclick = () => {
+      fetch('http://localhost:8000/api/data', {
+        method: 'GET',
+        credentials: 'include',
+        headers: { 'X-CSRF-Token': 'WRONG_TOKEN' }
+      })
+      .then(r => console.log('✅ Unexpectedly allowed', r.status))
+      .catch(e => console.error('🚫 Blocked as expected', e));
+    };
+  </script>
+</body>
+</html>

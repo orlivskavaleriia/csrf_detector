@@ -196,3 +196,99 @@ document.getElementById('export-json').addEventListener('click', () => {
 
 // Ініціалізуємо таблицю при відкритті попапу
 updateAuditTable();
+
+// Функція для відображення результатів аудиту форм
+function displayFormsAudit(forms) {
+  const formsList = document.getElementById('formsList');
+  formsList.innerHTML = '';
+
+  forms.forEach(form => {
+    const formElement = document.createElement('div');
+    formElement.className = `form-item ${form.hasCsrfToken && form.hasSecureMethod ? 'secure' : 'insecure'}`;
+    
+    formElement.innerHTML = `
+      <div class="form-header">
+        <strong>Форма ${form.id + 1}</strong>
+        <span class="status-badge ${form.hasCsrfToken ? 'success' : 'danger'}">
+          ${form.hasCsrfToken ? 'Захищена' : 'Незахищена'}
+        </span>
+      </div>
+      <div class="form-details">
+        <p>Метод: ${form.method}</p>
+        <p>URL: ${form.action}</p>
+        <p>Безпечний метод: ${form.hasSecureMethod ? 'Так' : 'Ні'}</p>
+        <p>Безпечний URL: ${form.hasSecureAction ? 'Так' : 'Ні'}</p>
+      </div>
+      <div class="form-inputs">
+        <strong>Поля форми:</strong>
+        <ul>
+          ${form.inputs.map(input => `
+            <li>${input.name} (${input.type}) ${input.required ? '(обов\'язкове)' : ''}</li>
+          `).join('')}
+        </ul>
+      </div>
+    `;
+
+    formsList.appendChild(formElement);
+  });
+}
+
+// Функція для відображення результатів аудиту запитів
+function displayRequestsAudit(requests) {
+  const requestsList = document.getElementById('requestsList');
+  requestsList.innerHTML = '';
+
+  requests.forEach(request => {
+    const requestElement = document.createElement('div');
+    requestElement.className = 'request-item';
+    
+    requestElement.innerHTML = `
+      <div class="request-header">
+        <strong>${request.type}</strong>
+        <span class="timestamp">${new Date(request.timestamp).toLocaleTimeString()}</span>
+      </div>
+      <div class="request-details">
+        <p>Метод: ${request.method}</p>
+        <p>URL: ${request.url}</p>
+      </div>
+    `;
+
+    requestsList.appendChild(requestElement);
+  });
+}
+
+// Обробник для кнопки запуску аудиту
+document.getElementById('runAudit').addEventListener('click', async () => {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  
+  chrome.tabs.sendMessage(tab.id, { type: 'RUN_CSRF_AUDIT' }, response => {
+    if (response && response.success) {
+      console.log('Аудит запущено');
+    }
+  });
+});
+
+// Обробник для кнопки очищення історії
+document.getElementById('clearAudit').addEventListener('click', () => {
+  chrome.storage.local.set({ auditHistory: [] }, () => {
+    document.getElementById('formsList').innerHTML = '';
+    document.getElementById('requestsList').innerHTML = '';
+  });
+});
+
+// Слухаємо результати аудиту від content.js
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'AUDIT_RESULTS') {
+    displayFormsAudit(message.data.forms);
+    displayRequestsAudit(message.data.requests);
+  }
+});
+
+// Завантажуємо останні результати аудиту при відкритті popup
+chrome.storage.local.get({ auditHistory: [] }, ({ auditHistory }) => {
+  if (auditHistory.length > 0) {
+    const lastAudit = auditHistory[auditHistory.length - 1];
+    displayFormsAudit(lastAudit.forms);
+    displayRequestsAudit(lastAudit.requests);
+  }
+});
