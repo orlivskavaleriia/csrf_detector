@@ -112,7 +112,6 @@ chrome.runtime.onInstalled.addListener(() => {
 chrome.runtime.onInstalled.addListener(() => {
   loadSettings();
   fetchCsrfToken();
-  updateSecurityPolicies();
 });
 chrome.runtime.onStartup.addListener(() => {
   loadSettings();
@@ -172,46 +171,4 @@ chrome.runtime.onMessage.addListener((msg, sender) => {
 // При закритті вкладки чистимо статус
 chrome.tabs.onRemoved.addListener(tabId => {
   delete pageStatus[tabId];
-});
-
-// Функція для оновлення політик безпеки
-async function updateSecurityPolicies() {
-  try {
-    const response = await fetch(POLICY_SERVER_URL);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const policies = await response.json();
-    
-    // Оновлюємо правила в chrome.storage.sync
-    await chrome.storage.sync.set({
-      securityPolicies: policies,
-      lastPolicyUpdate: Date.now()
-    });
-
-    // Оновлюємо правила DNR
-    if (policies.rules) {
-      await chrome.declarativeNetRequest.updateDynamicRules({
-        removeRuleIds: policies.rules.map(r => r.id),
-        addRules: policies.rules
-      });
-    }
-
-    console.log('Security policies updated successfully');
-  } catch (error) {
-    console.error('Failed to update security policies:', error);
-  }
-}
-
-// Встановлюємо періодичне оновлення політик
-chrome.alarms.create('updatePolicies', {
-  periodInMinutes: POLICY_UPDATE_INTERVAL / (60 * 1000)
-});
-
-// Обробник для періодичного оновлення
-chrome.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === 'updatePolicies') {
-    updateSecurityPolicies();
-  }
 });
