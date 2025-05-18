@@ -160,10 +160,37 @@ function updateBadge(tabId, level) {
 }
 
 // 7) Логування подій — ваш існуючий код
-function logEvent(msg) {
-  // … реалізація логування
+function logEvent(e) {
+  chrome.storage.local.get({ eventHistory: [] }, ({ eventHistory }) => {
+    eventHistory.push(e);
+    chrome.storage.local.set({ eventHistory });
+  });
 }
 
+// Отримуємо сигнали з content.js
+chrome.runtime.onMessage.addListener((msg, sender) => {
+  if (!sender.tab) return;
+  const tabId = sender.tab.id;
+
+  if (msg.type === 'CSRF_WARN') {
+    // msg.level: 'yellow' або 'red'
+    pageStatus[tabId] = msg.level;
+
+    // Оновлюємо бейдж для вкладки
+    chrome.action.setBadgeText({ tabId, text: msg.level === 'red' ? '!' : '?' });
+    chrome.action.setBadgeBackgroundColor({ tabId, color: COLOR_MAP[msg.level] });
+
+    // Лог
+    logEvent({
+      type:    msg.level === 'red' ? 'blocked' : 'warned',
+      url:     msg.url,
+      level:   msg.level,
+      time:    Date.now()
+    });
+  }
+});
+
+// При закритті вкладки чистимо статус
 chrome.tabs.onRemoved.addListener(tabId => {
   delete pageStatus[tabId];
 });
