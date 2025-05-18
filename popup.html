@@ -107,6 +107,20 @@
       <button id="clearAudit" class="btn btn-secondary">Очистити історію</button>
     </div>
 
+    <div class="legend">
+      <h4>Пояснення індикаторів:</h4>
+      <ul>
+        <li><span class="indicator success">✔</span> — Ознака безпеки (рекомендовано)</li>
+        <li><span class="indicator warning">✖</span> — Ознака ризику (небажано)</li>
+      </ul>
+      <ul>
+        <li><b>Безпечний метод</b>: POST або інший, що не змінює стан (GET — небажано для чутливих дій)</li>
+        <li><b>Безпечний URL</b>: HTTPS (зашифровано)</li>
+        <li><b>Same Origin</b>: Запит на той самий домен</li>
+        <li><b>CSRF Token</b>: Наявність захисного токена у формі/запиті</li>
+      </ul>
+    </div>
+
     <div class="audit-results">
       <div class="audit-section">
         <h4>Форми</h4>
@@ -284,35 +298,47 @@
   /* Стилі для загального показника безпеки */
   .security-score {
     text-align: center;
-    padding: 15px;
-    border-radius: 8px;
-    margin: 15px 0;
+    padding: 20px 10px;
+    border-radius: 12px;
+    margin: 20px 0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    transition: background 0.3s, border 0.3s;
+    position: relative;
   }
 
   .security-score.high {
-    background-color: #e8f5e9;
-    border: 2px solid #4CAF50;
+    background: linear-gradient(90deg, #e8f5e9 60%, #b9f6ca 100%);
+    border: 3px solid #4CAF50;
   }
 
   .security-score.medium {
-    background-color: #fff3e0;
-    border: 2px solid #ff9800;
+    background: linear-gradient(90deg, #fffde7 60%, #ffe082 100%);
+    border: 3px solid #ff9800;
   }
 
   .security-score.low {
-    background-color: #ffebee;
-    border: 2px solid #f44336;
+    background: linear-gradient(90deg, #ffebee 60%, #ffcdd2 100%);
+    border: 3px solid #f44336;
   }
 
   .score-value {
-    font-size: 2em;
+    font-size: 3em;
     font-weight: bold;
-    margin: 10px 0;
+    margin: 10px 0 0 0;
+    line-height: 1;
+  }
+
+  .score-icon {
+    font-size: 2.5em;
+    margin-bottom: 5px;
+    display: block;
   }
 
   .score-description {
-    font-size: 1.1em;
+    font-size: 1.2em;
     color: #666;
+    margin-top: 8px;
   }
   </style>
 

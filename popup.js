@@ -219,13 +219,13 @@ function displayFormsAudit(forms) {
         <p>Метод: ${form.method}</p>
         <p>URL: ${form.action}</p>
         <div class="security-indicators">
-          <span class="indicator ${form.hasSecureMethod ? 'success' : 'warning'}">
+          <span class="indicator ${form.hasSecureMethod ? 'success' : 'warning'}" title="POST — безпечний, GET — небажано">
             Безпечний метод: ${form.hasSecureMethod ? '✔' : '✖'}
           </span>
-          <span class="indicator ${form.hasSecureAction ? 'success' : 'warning'}">
+          <span class="indicator ${form.hasSecureAction ? 'success' : 'warning'}" title="HTTPS — безпечний, HTTP — небажано">
             Безпечний URL: ${form.hasSecureAction ? '✔' : '✖'}
           </span>
-          <span class="indicator ${form.hasSameOriginAction ? 'success' : 'warning'}">
+          <span class="indicator ${form.hasSameOriginAction ? 'success' : 'warning'}" title="Той самий домен — безпечно">
             Same Origin: ${form.hasSameOriginAction ? '✔' : '✖'}
           </span>
         </div>
@@ -279,13 +279,13 @@ function displayRequestsAudit(requests) {
         <p>Метод: ${request.method}</p>
         <p>URL: ${request.url}</p>
         <div class="security-indicators">
-          <span class="indicator ${request.security.hasCsrfToken ? 'success' : 'warning'}">
+          <span class="indicator ${request.security.hasCsrfToken ? 'success' : 'warning'}" title="CSRF Token: наявність захисного токена у запиті">
             CSRF Token: ${request.security.hasCsrfToken ? '✔' : '✖'}
           </span>
-          <span class="indicator ${request.security.isSameOrigin ? 'success' : 'warning'}">
+          <span class="indicator ${request.security.isSameOrigin ? 'success' : 'warning'}" title="Same Origin: запит на той самий домен">
             Same Origin: ${request.security.isSameOrigin ? '✔' : '✖'}
           </span>
-          <span class="indicator ${request.security.hasSecureProtocol ? 'success' : 'warning'}">
+          <span class="indicator ${request.security.hasSecureProtocol ? 'success' : 'warning'}" title="HTTPS: зашифрований запит">
             HTTPS: ${request.security.hasSecureProtocol ? '✔' : '✖'}
           </span>
         </div>
@@ -326,18 +326,23 @@ function displaySecurityScore(score) {
   if (!scoreElement) return;
 
   let scoreClass = 'low';
-  if (score >= 80) scoreClass = 'high';
-  else if (score >= 50) scoreClass = 'medium';
+  let icon = '😱';
+  let desc = 'Низький рівень безпеки';
+  if (score >= 80) {
+    scoreClass = 'high';
+    icon = '🛡️';
+    desc = 'Високий рівень безпеки';
+  } else if (score >= 50) {
+    scoreClass = 'medium';
+    icon = '⚠️';
+    desc = 'Середній рівень безпеки';
+  }
 
   scoreElement.innerHTML = `
     <div class="security-score ${scoreClass}">
-      <h3>Загальний показник безпеки</h3>
+      <span class="score-icon">${icon}</span>
       <div class="score-value">${score}/100</div>
-      <div class="score-description">
-        ${score >= 80 ? 'Високий рівень безпеки' : 
-          score >= 50 ? 'Середній рівень безпеки' : 
-          'Низький рівень безпеки'}
-      </div>
+      <div class="score-description">${desc}</div>
     </div>
   `;
 }
