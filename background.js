@@ -173,12 +173,6 @@ chrome.tabs.onRemoved.addListener(tabId => {
   delete pageStatus[tabId];
 });
 
-function auditCookies() {
-  return new Promise(resolve => {
-    chrome.runtime.sendMessage({ type: 'GET_COOKIES', url: location.href }, resolve);
-  });
-}
-
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === 'GET_COOKIES') {
     const url = new URL(msg.url);
@@ -196,7 +190,6 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       };
       sendResponse(cookieAudit);
     });
-    // ВАЖЛИВО!
     return true;
   }
 });

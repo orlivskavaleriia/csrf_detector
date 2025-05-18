@@ -56,39 +56,8 @@ window.addEventListener('message', event => {
 
 // Функція для перевірки кукі
 function auditCookies() {
-  const cookies = document.cookie.split(';').map(cookie => {
-    const [name, value] = cookie.trim().split('=');
-    return { name, value };
-  });
-
-  const cookieAudit = {
-    total: cookies.length,
-    secure: 0,
-    httpOnly: 0,
-    sameSite: {
-      strict: 0,
-      lax: 0,
-      none: 0,
-      unspecified: 0
-    }
-  };
-
-  // Отримуємо детальну інформацію про кукі через chrome.cookies API
   return new Promise(resolve => {
-    chrome.cookies.getAll({}, cookies => {
-      cookies.forEach(cookie => {
-        if (cookie.secure) cookieAudit.secure++;
-        if (cookie.httpOnly) cookieAudit.httpOnly++;
-        
-        switch (cookie.sameSite) {
-          case 'strict': cookieAudit.sameSite.strict++; break;
-          case 'lax': cookieAudit.sameSite.lax++; break;
-          case 'none': cookieAudit.sameSite.none++; break;
-          default: cookieAudit.sameSite.unspecified++;
-        }
-      });
-      resolve(cookieAudit);
-    });
+    chrome.runtime.sendMessage({ type: 'GET_COOKIES', url: location.href }, resolve);
   });
 }
 
