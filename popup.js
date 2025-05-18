@@ -275,8 +275,14 @@ function displayRequestsAudit(requests) {
   requestsList.innerHTML = '';
   requestsList.classList.remove('fade-in');
 
+  // Додаємо пояснення про CORS
+  const corsInfo = document.createElement('div');
+  corsInfo.className = 'cors-info';
+  corsInfo.innerHTML = '<b>Примітка:</b> Деякі AJAX-запити могли бути заблоковані політикою CORS, але сам факт їх відправки зафіксовано.';
+  requestsList.appendChild(corsInfo);
+
   if (!requests.length) {
-    requestsList.innerHTML = '<div class="empty-msg">Немає знайдених AJAX-запитів</div>';
+    requestsList.innerHTML += '<div class="empty-msg">Немає знайдених AJAX-запитів</div>';
     requestsList.classList.add('fade-in');
     return;
   }
@@ -302,6 +308,9 @@ function displayRequestsAudit(requests) {
           </span>
           <span class="indicator ${request.security.hasSecureProtocol ? 'success' : 'warning'}" title="HTTPS: зашифрований запит">
             HTTPS: ${request.security.hasSecureProtocol ? '✔' : '✖'}
+          </span>
+          <span class="indicator ${request.corsBlocked ? 'danger' : 'success'}" title="CORS: чи була відповідь заблокована політикою CORS">
+            CORS: ${request.corsBlocked ? '✖ (запит заблоковано політикою CORS)' : '✔ (відповідь дозволена)'}
           </span>
         </div>
       </div>
