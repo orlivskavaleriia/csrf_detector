@@ -266,6 +266,11 @@ function displayRequestsAudit(requests) {
   const requestsList = document.getElementById('requestsList');
   requestsList.innerHTML = '';
 
+  if (!requests.length) {
+    requestsList.innerHTML = '<div class="empty-msg">Немає знайдених AJAX-запитів</div>';
+    return;
+  }
+
   requests.forEach(request => {
     const requestElement = document.createElement('div');
     requestElement.className = 'request-item';
@@ -300,6 +305,11 @@ function displayRequestsAudit(requests) {
 function displayCookiesAudit(cookies) {
   const cookiesList = document.getElementById('cookiesList');
   if (!cookiesList) return;
+
+  if (!cookies || cookies.total === 0) {
+    cookiesList.innerHTML = '<div class="empty-msg">Немає знайдених кукі</div>';
+    return;
+  }
 
   cookiesList.innerHTML = `
     <div class="cookies-summary">
