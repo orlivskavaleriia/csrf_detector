@@ -358,3 +358,32 @@ chrome.storage.local.get({ auditHistory: [] }, ({ auditHistory }) => {
     displayRequestsAudit(lastAudit.requests);
   }
 });
+
+function auditCookies() {
+  return new Promise(resolve => {
+    chrome.runtime.sendMessage({ type: 'GET_COOKIES', url: location.href }, resolve);
+  });
+}
+
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.type === 'GET_COOKIES') {
+    const url = new URL(msg.url);
+    chrome.cookies.getAll({ domain: url.hostname }, cookies => {
+      // тут формуєте статистику по кукі
+      const cookieAudit = {
+        total: cookies.length,
+        secure: cookies.filter(c => c.secure).length,
+        httpOnly: cookies.filter(c => c.httpOnly).length,
+        sameSite: {
+          strict: cookies.filter(c => c.sameSite === 'Strict').length,
+          lax: cookies.filter(c => c.sameSite === 'Lax').length,
+          none: cookies.filter(c => c.sameSite === 'None').length,
+          unspecified: cookies.filter(c => !c.sameSite).length
+        }
+      };
+      sendResponse(cookieAudit);
+    });
+    // ВАЖЛИВО!
+    return true;
+  }
+});
