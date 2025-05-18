@@ -389,3 +389,14 @@ chrome.storage.local.get({ auditHistory: [] }, ({ auditHistory }) => {
     displayRequestsAudit(lastAudit.requests);
   }
 });
+
+chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+  const url = tabs[0].url;
+  chrome.runtime.sendMessage(
+    { type: 'GET_COOKIES', url },
+    cookieAudit => {
+      console.log('COOKIE AUDIT:', cookieAudit);
+      displayCookiesAudit(cookieAudit);
+    }
+  );
+});

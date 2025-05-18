@@ -177,12 +177,12 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === 'GET_COOKIES') {
     const url = new URL(msg.url);
     chrome.cookies.getAll({}, cookies => {
-      // Фільтруємо кукі вручну по домену (hostname) і шляху
+      console.log('ВСІ КУКІ:', cookies.map(c => ({name: c.name, domain: c.domain, value: c.value})));
       const filtered = cookies.filter(c => {
         // Домен може бути з крапкою або без, порівнюємо обидва варіанти
         return c.domain.replace(/^\./, '') === url.hostname;
       });
-      console.log('COOKIES AUDIT (filtered):', filtered, 'url:', msg.url);
+      console.log('ВІДФІЛЬТРОВАНІ КУКІ:', filtered.map(c => ({name: c.name, domain: c.domain, value: c.value})), 'url:', msg.url, 'hostname:', url.hostname);
       const cookieAudit = {
         total: filtered.length,
         secure: filtered.filter(c => c.secure).length,

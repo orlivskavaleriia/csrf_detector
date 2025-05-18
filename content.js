@@ -128,7 +128,8 @@ function auditForms() {
 // Розширена функція аудиту AJAX запитів
 function auditAjaxRequests() {
   const requests = [];
-  
+  // Всі outgoing AJAX-запити фіксуються незалежно від CORS
+
   // Перехоплюємо всі XHR запити
   const originalXHR = window.XMLHttpRequest;
   window.XMLHttpRequest = function() {
@@ -143,13 +144,14 @@ function auditAjaxRequests() {
         method: arguments[0],
         timestamp: Date.now(),
         headers: {},
+        corsBlocked: false, // нове поле
         security: {
           isSameOrigin: new URL(arguments[1], window.location.href).origin === window.location.origin,
           hasCsrfToken: false,
           hasSecureProtocol: arguments[1].startsWith('https://')
         }
       };
-
+      console.log('[AUDIT] XHR open:', requestData.method, requestData.url);
       xhr.setRequestHeader = function(header, value) {
         requestData.headers[header] = value;
         if (header.toLowerCase() === 'x-csrf-token' || 
@@ -159,11 +161,13 @@ function auditAjaxRequests() {
         }
         return originalSetRequestHeader.apply(this, arguments);
       };
-
+      // Додаємо обробник помилок CORS
+      xhr.addEventListener('error', function() {
+        requestData.corsBlocked = true;
+      });
       requests.push(requestData);
       return originalOpen.apply(this, arguments);
     };
-    
     return xhr;
   };
 
@@ -176,13 +180,13 @@ function auditAjaxRequests() {
       method: arguments[1]?.method || 'GET',
       timestamp: Date.now(),
       headers: arguments[1]?.headers || {},
+      corsBlocked: false, // нове поле
       security: {
         isSameOrigin: new URL(arguments[0], window.location.href).origin === window.location.origin,
         hasCsrfToken: false,
         hasSecureProtocol: arguments[0].startsWith('https://')
       }
     };
-
     // Перевіряємо заголовки на наявність CSRF токена
     if (arguments[1]?.headers) {
       for (const [header, value] of Object.entries(arguments[1].headers)) {
@@ -193,11 +197,15 @@ function auditAjaxRequests() {
         }
       }
     }
-
-    requests.push(requestData);
-    return originalFetch.apply(this, arguments);
+    console.log('[AUDIT] fetch:', requestData.method, requestData.url);
+    // Додаємо обробку CORS-блокування
+    return originalFetch.apply(this, arguments).catch(err => {
+      requestData.corsBlocked = true;
+      return Promise.reject(err);
+    }).finally(() => {
+      requests.push(requestData);
+    });
   };
-
   return requests;
 }
 
@@ -215,24 +223,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         cookies,
         timestamp: Date.now(),
         url: window.location.href,
-        securityScore: calculateSecurityScore(forms, requests, cookies)
+        securityScore: calculateSecurityScore(forms, requests, cookies),
+        corsInfo: 'Деякі AJAX-запити могли бути заблоковані політикою CORS, але сам факт їх відправки зафіксовано.'
       };
-
       // Зберігаємо результати аудиту
       chrome.storage.local.get({ auditHistory: [] }, ({ auditHistory }) => {
         auditHistory.push(auditResults);
         chrome.storage.local.set({ auditHistory });
       });
-
       // Відправляємо результати в background.js
       chrome.runtime.sendMessage({
         type: 'AUDIT_RESULTS',
         data: auditResults
       });
-
       sendResponse({ success: true });
     });
-
     return true; // Важливо для асинхронної відповіді
   }
 });
