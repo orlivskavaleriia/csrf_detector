@@ -155,9 +155,11 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Запустити аудит при кліку
-document.getElementById('run-audit').addEventListener('click', () => {
-  chrome.tabs.query({active: true, currentWindow: true}, tabs => {
-    chrome.tabs.sendMessage(tabs[0].id, { type: 'RUN_CSRF_AUDIT' });
+document.getElementById('runAudit').addEventListener('click', async () => {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  console.log('Відправляю RUN_CSRF_AUDIT у вкладку', tab.id);
+  chrome.tabs.sendMessage(tab.id, { type: 'RUN_CSRF_AUDIT' }, response => {
+    console.log('Відповідь від контент-скрипта:', response);
   });
 });
 
@@ -342,11 +344,10 @@ function displaySecurityScore(score) {
 
 // Оновлений обробник результатів аудиту
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === 'AUDIT_RESULTS') {
-    displayFormsAudit(message.data.forms);
-    displayRequestsAudit(message.data.requests);
-    displayCookiesAudit(message.data.cookies);
-    displaySecurityScore(message.data.securityScore);
+  console.log('Отримано повідомлення у content.js:', message);
+  if (message.type === 'RUN_CSRF_AUDIT') {
+    // ... ваш код аудиту ...
+    sendResponse({ success: true });
   }
 });
 
