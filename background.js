@@ -100,54 +100,13 @@ async function validateRequestHeaders(details) {
   return { valid: true };
 }
 
-// Оновлений обробник запитів
-chrome.webRequest.onBeforeSendHeaders.addListener(
-  async (details) => {
-    // Пропускаємо запити самого розширення
-    if (details.initiator && details.initiator.startsWith('chrome-extension://')) {
-      return { requestHeaders: details.requestHeaders };
-    }
+// Видалено chrome.webRequest.onBeforeSendHeaders для сумісності з Manifest V3
+// Усі перевірки та блокування тепер мають виконуватись через declarativeNetRequest або контент-скрипти
 
-    const validation = await validateRequestHeaders(details);
-    
-    if (!validation.valid) {
-      // Логуємо деталі заблокованого запиту
-      logEvent({
-        type: 'blocked',
-        url: details.url,
-        reason: validation.reason,
-        headers: {
-          origin: details.requestHeaders.find(h => h.name.toLowerCase() === 'origin')?.value,
-          referer: details.requestHeaders.find(h => h.name.toLowerCase() === 'referer')?.value,
-          token: details.requestHeaders.find(h => h.name === 'X-CSRF-Token')?.value
-        },
-        time: Date.now()
-      });
-
-      // Оновлюємо статус
-      updateBadge(details.tabId, 'red');
-      logEvent({ type: 'blocked', url: details.url, level: 'red', time: Date.now() });
-
-      if (settings.autoBlock) {
-        blockUrlWithDNR(1, details.url);
-      }
-
-      return { cancel: true };
-    }
-
-    // Додаємо CSRF токен до запиту якщо його немає
-    if (!details.requestHeaders.find(h => h.name === 'X-CSRF-Token')) {
-      details.requestHeaders.push({
-        name: 'X-CSRF-Token',
-        value: csrfToken
-      });
-    }
-
-    return { requestHeaders: details.requestHeaders };
-  },
-  { urls: ["<all_urls>"] },
-  ["blocking", "requestHeaders"]
-);
+// Додаю простий listener для перевірки активації Service Worker
+chrome.runtime.onInstalled.addListener(() => {
+  console.log('Service Worker активний!');
+});
 
 // 4) При встановленні та запуску розширення — зчитати налаштування і підхопити токен
 chrome.runtime.onInstalled.addListener(() => {
