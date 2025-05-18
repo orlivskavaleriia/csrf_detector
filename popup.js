@@ -216,14 +216,40 @@ function displayFormsAudit(forms) {
       <div class="form-details">
         <p>Метод: ${form.method}</p>
         <p>URL: ${form.action}</p>
-        <p>Безпечний метод: ${form.hasSecureMethod ? 'Так' : 'Ні'}</p>
-        <p>Безпечний URL: ${form.hasSecureAction ? 'Так' : 'Ні'}</p>
+        <div class="security-indicators">
+          <span class="indicator ${form.hasSecureMethod ? 'success' : 'warning'}">
+            Безпечний метод: ${form.hasSecureMethod ? '✔' : '✖'}
+          </span>
+          <span class="indicator ${form.hasSecureAction ? 'success' : 'warning'}">
+            Безпечний URL: ${form.hasSecureAction ? '✔' : '✖'}
+          </span>
+          <span class="indicator ${form.hasSameOriginAction ? 'success' : 'warning'}">
+            Same Origin: ${form.hasSameOriginAction ? '✔' : '✖'}
+          </span>
+        </div>
+        <div class="security-headers">
+          <h4>Заголовки безпеки:</h4>
+          <ul>
+            <li>CSP: ${form.securityHeaders.hasContentSecurityPolicy ? '✔' : '✖'}</li>
+            <li>X-Frame-Options: ${form.securityHeaders.hasXFrameOptions ? '✔' : '✖'}</li>
+            <li>X-Content-Type-Options: ${form.securityHeaders.hasXContentTypeOptions ? '✔' : '✖'}</li>
+          </ul>
+        </div>
       </div>
       <div class="form-inputs">
         <strong>Поля форми:</strong>
         <ul>
           ${form.inputs.map(input => `
-            <li>${input.name} (${input.type}) ${input.required ? '(обов\'язкове)' : ''}</li>
+            <li>
+              ${input.name} (${input.type})
+              ${input.required ? '<span class="required">*</span>' : ''}
+              <div class="input-security">
+                ${input.hasAutocomplete ? '<span class="security-feature">autocomplete</span>' : ''}
+                ${input.hasPattern ? '<span class="security-feature">pattern</span>' : ''}
+                ${input.hasMinLength ? '<span class="security-feature">minlength</span>' : ''}
+                ${input.hasMaxLength ? '<span class="security-feature">maxlength</span>' : ''}
+              </div>
+            </li>
           `).join('')}
         </ul>
       </div>
@@ -250,6 +276,17 @@ function displayRequestsAudit(requests) {
       <div class="request-details">
         <p>Метод: ${request.method}</p>
         <p>URL: ${request.url}</p>
+        <div class="security-indicators">
+          <span class="indicator ${request.security.hasCsrfToken ? 'success' : 'warning'}">
+            CSRF Token: ${request.security.hasCsrfToken ? '✔' : '✖'}
+          </span>
+          <span class="indicator ${request.security.isSameOrigin ? 'success' : 'warning'}">
+            Same Origin: ${request.security.isSameOrigin ? '✔' : '✖'}
+          </span>
+          <span class="indicator ${request.security.hasSecureProtocol ? 'success' : 'warning'}">
+            HTTPS: ${request.security.hasSecureProtocol ? '✔' : '✖'}
+          </span>
+        </div>
       </div>
     `;
 
@@ -257,30 +294,59 @@ function displayRequestsAudit(requests) {
   });
 }
 
-// Обробник для кнопки запуску аудиту
-document.getElementById('runAudit').addEventListener('click', async () => {
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  
-  chrome.tabs.sendMessage(tab.id, { type: 'RUN_CSRF_AUDIT' }, response => {
-    if (response && response.success) {
-      console.log('Аудит запущено');
-    }
-  });
-});
+// Функція для відображення результатів аудиту кукі
+function displayCookiesAudit(cookies) {
+  const cookiesList = document.getElementById('cookiesList');
+  if (!cookiesList) return;
 
-// Обробник для кнопки очищення історії
-document.getElementById('clearAudit').addEventListener('click', () => {
-  chrome.storage.local.set({ auditHistory: [] }, () => {
-    document.getElementById('formsList').innerHTML = '';
-    document.getElementById('requestsList').innerHTML = '';
-  });
-});
+  cookiesList.innerHTML = `
+    <div class="cookies-summary">
+      <h4>Загальна статистика кукі:</h4>
+      <ul>
+        <li>Всього кукі: ${cookies.total}</li>
+        <li>Secure: ${cookies.secure} (${Math.round(cookies.secure/cookies.total*100)}%)</li>
+        <li>HttpOnly: ${cookies.httpOnly} (${Math.round(cookies.httpOnly/cookies.total*100)}%)</li>
+      </ul>
+      <h4>SameSite атрибути:</h4>
+      <ul>
+        <li>Strict: ${cookies.sameSite.strict} (${Math.round(cookies.sameSite.strict/cookies.total*100)}%)</li>
+        <li>Lax: ${cookies.sameSite.lax} (${Math.round(cookies.sameSite.lax/cookies.total*100)}%)</li>
+        <li>None: ${cookies.sameSite.none} (${Math.round(cookies.sameSite.none/cookies.total*100)}%)</li>
+        <li>Не вказано: ${cookies.sameSite.unspecified} (${Math.round(cookies.sameSite.unspecified/cookies.total*100)}%)</li>
+      </ul>
+    </div>
+  `;
+}
 
-// Слухаємо результати аудиту від content.js
+// Функція для відображення загального показника безпеки
+function displaySecurityScore(score) {
+  const scoreElement = document.getElementById('securityScore');
+  if (!scoreElement) return;
+
+  let scoreClass = 'low';
+  if (score >= 80) scoreClass = 'high';
+  else if (score >= 50) scoreClass = 'medium';
+
+  scoreElement.innerHTML = `
+    <div class="security-score ${scoreClass}">
+      <h3>Загальний показник безпеки</h3>
+      <div class="score-value">${score}/100</div>
+      <div class="score-description">
+        ${score >= 80 ? 'Високий рівень безпеки' : 
+          score >= 50 ? 'Середній рівень безпеки' : 
+          'Низький рівень безпеки'}
+      </div>
+    </div>
+  `;
+}
+
+// Оновлений обробник результатів аудиту
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'AUDIT_RESULTS') {
     displayFormsAudit(message.data.forms);
     displayRequestsAudit(message.data.requests);
+    displayCookiesAudit(message.data.cookies);
+    displaySecurityScore(message.data.securityScore);
   }
 });
 

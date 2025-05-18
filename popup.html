@@ -99,70 +99,220 @@
 
   <div class="audit-section">
     <h3>Результати аудиту безпеки</h3>
+    
+    <div id="securityScore"></div>
+    
     <div class="audit-controls">
       <button id="runAudit" class="btn btn-primary">Запустити аудит</button>
       <button id="clearAudit" class="btn btn-secondary">Очистити історію</button>
     </div>
-    
+
     <div class="audit-results">
-      <div class="forms-audit">
-        <h4>Аудит форм</h4>
+      <div class="audit-section">
+        <h4>Форми</h4>
         <div id="formsList" class="audit-list"></div>
       </div>
-      
-      <div class="requests-audit">
-        <h4>Аудит AJAX запитів</h4>
+
+      <div class="audit-section">
+        <h4>AJAX запити</h4>
         <div id="requestsList" class="audit-list"></div>
+      </div>
+
+      <div class="audit-section">
+        <h4>Кукі</h4>
+        <div id="cookiesList" class="audit-list"></div>
       </div>
     </div>
   </div>
 
   <style>
+  /* Загальні стилі для секцій аудиту */
   .audit-section {
-    margin-top: 20px;
-    padding: 15px;
-    background: #f8f9fa;
-    border-radius: 8px;
-  }
-
-  .audit-controls {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 15px;
-  }
-
-  .audit-results {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-  }
-
-  .audit-list {
-    max-height: 300px;
-    overflow-y: auto;
+    margin: 15px 0;
     padding: 10px;
-    background: white;
+    border: 1px solid #ddd;
     border-radius: 4px;
-    border: 1px solid #dee2e6;
   }
 
-  .form-item, .request-item {
+  .audit-section h3 {
+    margin: 0 0 10px 0;
+    color: #333;
+  }
+
+  /* Стилі для індикаторів безпеки */
+  .security-indicators {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 8px 0;
+  }
+
+  .indicator {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+
+  .indicator.success {
+    background-color: #e6ffe6;
+    color: #006600;
+  }
+
+  .indicator.warning {
+    background-color: #fff3e6;
+    color: #cc7700;
+  }
+
+  .indicator.danger {
+    background-color: #ffe6e6;
+    color: #cc0000;
+  }
+
+  /* Стилі для форм */
+  .form-item {
+    margin: 10px 0;
     padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #e9ecef;
+    border: 1px solid #eee;
     border-radius: 4px;
   }
 
   .form-item.secure {
-    border-left: 4px solid #28a745;
+    border-left: 4px solid #4CAF50;
   }
 
   .form-item.insecure {
-    border-left: 4px solid #dc3545;
+    border-left: 4px solid #f44336;
   }
 
+  .form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .status-badge {
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.8em;
+  }
+
+  .status-badge.success {
+    background-color: #4CAF50;
+    color: white;
+  }
+
+  .status-badge.danger {
+    background-color: #f44336;
+    color: white;
+  }
+
+  /* Стилі для полів форми */
+  .form-inputs {
+    margin-top: 10px;
+  }
+
+  .form-inputs ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .form-inputs li {
+    margin: 5px 0;
+    padding: 5px;
+    background-color: #f9f9f9;
+    border-radius: 3px;
+  }
+
+  .required {
+    color: #f44336;
+    margin-left: 4px;
+  }
+
+  .input-security {
+    margin-top: 4px;
+  }
+
+  .security-feature {
+    display: inline-block;
+    padding: 2px 4px;
+    margin: 2px;
+    background-color: #e3f2fd;
+    color: #1976d2;
+    border-radius: 3px;
+    font-size: 0.8em;
+  }
+
+  /* Стилі для запитів */
   .request-item {
-    font-size: 0.9em;
+    margin: 8px 0;
+    padding: 8px;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+  }
+
+  .request-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+  }
+
+  .timestamp {
+    color: #666;
+    font-size: 0.8em;
+  }
+
+  /* Стилі для кукі */
+  .cookies-summary {
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 4px;
+  }
+
+  .cookies-summary ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .cookies-summary li {
+    margin: 5px 0;
+    padding: 5px;
+    background-color: white;
+    border-radius: 3px;
+  }
+
+  /* Стилі для загального показника безпеки */
+  .security-score {
+    text-align: center;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 15px 0;
+  }
+
+  .security-score.high {
+    background-color: #e8f5e9;
+    border: 2px solid #4CAF50;
+  }
+
+  .security-score.medium {
+    background-color: #fff3e0;
+    border: 2px solid #ff9800;
+  }
+
+  .security-score.low {
+    background-color: #ffebee;
+    border: 2px solid #f44336;
+  }
+
+  .score-value {
+    font-size: 2em;
+    font-weight: bold;
+    margin: 10px 0;
+  }
+
+  .score-description {
+    font-size: 1.1em;
+    color: #666;
   }
   </style>
 
