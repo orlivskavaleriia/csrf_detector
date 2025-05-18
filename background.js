@@ -126,6 +126,7 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
 
       // Оновлюємо статус
       updateBadge(details.tabId, 'red');
+      logEvent({ type: 'blocked', url: details.url, level: 'red', time: Date.now() });
 
       if (settings.autoBlock) {
         blockUrlWithDNR(1, details.url);

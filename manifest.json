@@ -9,7 +9,9 @@
     "tabs",
     "alarms",
     "declarativeNetRequest",
-    "declarativeNetRequestFeedback"
+    "declarativeNetRequestFeedback",
+    "scripting",
+    "cookies"
   ],
 
   "host_permissions": [
@@ -18,7 +20,7 @@
 
   "declarative_net_request": {
     "rule_resources": [{
-      "id": "csrf_static_rules",
+      "id": "csrf_rules.json",
       "enabled": true,
       "path": "csrf_rules.json"
     }]
@@ -40,5 +42,12 @@
   "web_accessible_resources": [{
     "resources": ["popup.css", "popup.js"],
     "matches": ["<all_urls>"]
-  }]
+  }],
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ]
 }
